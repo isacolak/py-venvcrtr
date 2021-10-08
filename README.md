@@ -5,8 +5,8 @@ Creates a virtual environment for Python.
 ## Installing And Build
 
 ```sh
-git clone https://github.com/isacolak/python-venvcrtr
-cd python-venvcrtr
+git clone https://github.com/isacolak/py-venvcrtr
+cd py-venvcrtr
 python make.py
 ```
 
@@ -15,41 +15,41 @@ python make.py
 Help
 
 ```sh
-venvcrtr -h
+py_venvcrtr -h
 ```
 
 Returns list of python executables
 
 ```sh
-venvcrtr -pyl
+py_venvcrtr -pyl
 ```
 
 Returns list of python versions
 
 ```sh
-venvcrtr -pyvl
+py_venvcrtr -pyvl
 ```
 
 Example of creating a simple venv
 
 ```sh
-venvcrtr venv
+py_venvcrtr venv
 ```
 
 Example of creating a simple venv with a different executable
 
 ```sh
-venvcrtr venv -py {executable_path}
+py_venvcrtr venv -py {executable_path}
 ```
 
 Example of creating a simple venv with a different version
 
 ```sh
-venvcrtr venv -pyv {version}
+py_venvcrtr venv -pyv {version}
 ```
 
 Example of creating a simple venv with libraries
 
 ```sh
-venvcrtr venv python-switch ...
+py_venvcrtr venv python-switch ...
 ```
