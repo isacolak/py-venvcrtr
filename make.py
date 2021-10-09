@@ -14,10 +14,10 @@ def main():
 
 	if "make" in args or len(args) == 0:
 		print("\n\t[INFO] The necessary libraries are being installed\n")
-		p = subprocess.Popen([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"],stdout=sys.stdout,stderr=sys.stderr).communicate()
+		p = subprocess.Popen(["python", "-m", "pip", "install", "-r", "requirements.txt"],stdout=sys.stdout,stderr=sys.stderr).communicate()
 		print("\n\t[INFO] The necessary libraries were installed")
 		print("\n\t[INFO] The executable file is created\n")
-		p2 = subprocess.Popen(["{}/Scripts/pyinstaller.exe".format(sys.base_prefix),"py_venvcrtr.py","-F","-c","-n","py_venvcrtr"],stdout=sys.stdout,stderr=sys.stderr).communicate()
+		p2 = subprocess.Popen(["pyinstaller","py_venvcrtr.py","-F","-c","-n","py_venvcrtr"],stdout=sys.stdout,stderr=sys.stderr).communicate()
 		exec_file = glob.glob("./dist/py_venvcrtr*")[0]
 		exec_file_name = exec_file.split("/")[-1]
 		shutil.move(exec_file,f"./{exec_file_name}")
@@ -30,7 +30,21 @@ def main():
 		print("\n\t[INFO] Unnecessary files and folders have been deleted\n")
 
 	elif len(args) > 0 and accept_args:
-		p2 = subprocess.Popen(["{}/Scripts/pyinstaller.exe".format(sys.base_prefix)]+sys.argv[1:],stdout=sys.stdout,stderr=sys.stderr).communicate()
+		print("\n\t[INFO] The necessary libraries are being installed\n")
+		p = subprocess.Popen(["python", "-m", "pip", "install", "-r", "requirements.txt"],stdout=sys.stdout,stderr=sys.stderr).communicate()
+		print("\n\t[INFO] The necessary libraries were installed")
+		print("\n\t[INFO] The executable file is created\n")
+		p2 = subprocess.Popen(["pyinstaller"]+args,stdout=sys.stdout,stderr=sys.stderr).communicate()
+		exec_file = glob.glob("./dist/py_venvcrtr*")[0]
+		exec_file_name = exec_file.split("/")[-1]
+		shutil.move(exec_file,f"./{exec_file_name}")
+		print("\n\t[INFO] The executable file has been created\n")
+		print("\n\t[INFO] Unnecessary files and folders are deleted\n")
+		shutil.rmtree("./dist")
+		shutil.rmtree("./build")
+		shutil.rmtree("./__pycache__")
+		os.remove("py_venvcrtr.spec")
+		print("\n\t[INFO] Unnecessary files and folders have been deleted\n")
 
 	else:
 		print("usage: make.py [make]")
