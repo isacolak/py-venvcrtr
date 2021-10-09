@@ -1,5 +1,6 @@
 import os
 import sys
+import glob
 import shutil
 import subprocess
 
@@ -17,7 +18,9 @@ def main():
 		print("\n\t[INFO] The necessary libraries were installed")
 		print("\n\t[INFO] The executable file is created\n")
 		p2 = subprocess.Popen(["{}/Scripts/pyinstaller.exe".format(sys.base_prefix),"py_venvcrtr.py","-F","-c","-n","py_venvcrtr"],stdout=sys.stdout,stderr=sys.stderr).communicate()
-		shutil.move("./dist/py_venvcrtr.exe","./py_venvcrtr.exe")
+		exec_file = glob.glob("./dist/py_venvcrtr*")[0]
+		exec_file_name = exec_file.split("/")[-1]
+		shutil.move(exec_file,f"./{exec_file_name}")
 		print("\n\t[INFO] The executable file has been created\n")
 		print("\n\t[INFO] Unnecessary files and folders are deleted\n")
 		shutil.rmtree("./dist")
