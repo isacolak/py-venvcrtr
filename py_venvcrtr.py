@@ -5,27 +5,12 @@ import shutil
 import argparse
 import subprocess
 from tqdm import tqdm
+from itertools import chain
 
 __author__ = "İsa Çolak"
 __copyright__ = "Copyright (C) 2021 İsa Çolak"
-__license__ = open("./LICENSE","r",encoding="utf-8").read()
+__license__ = "MIT License"
 __version__ = "0.1"
-
-def venvCreator(args,executable,verbose):
-	if isinstance(args,str):
-		args = args.split()
-	elif isinstance(args,list):
-		pass
-	else:
-		raise TypeError("args must be list object or str object")
-	
-	args = [executable,"-m","venv"]+args
-	
-	if verbose:
-		print("")
-		p = subprocess.Popen(args,stdout=sys.stdout,stderr=sys.stderr).communicate()
-	else:
-		p = subprocess.Popen(args,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
 class printExecutablesAction(argparse.Action):
 	def __init__(self,
@@ -71,18 +56,62 @@ class printExecutablesVersionDictAction(argparse.Action):
 			print(f"{executable} => {executablesDict[executable]}")
 		parser.exit()
 
+def venvCreator(args,executable,verbose):
+	if isinstance(args,str):
+		args = args.split()
+	elif isinstance(args,list):
+		pass
+	else:
+		raise TypeError("args must be list object or str object")
+	
+	args = ["virtualenv",f"--python={executable}"]+args
+	
+	if verbose:
+		print("")
+		p = subprocess.Popen(args,stdout=sys.stdout,stderr=sys.stderr).communicate()
+	else:
+		p = subprocess.Popen(args,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+
 def findPythonExecutables(isReturnVersionDict=False):
 	executables = {}
 	executablesDict = {}
 
-	p = subprocess.Popen(["py","-0p"],stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode("utf-8")[3:]
-	exeL = p.split("\n")
+	try:
+		p = subprocess.Popen(["py","-0p"],stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		exeL = p[0].decode("utf-8")[3:].split("\n")
+		for exe in exeL:
+			exeV = exe.split()[0].split("-")[1]
+			exeP = exe.split(" "*8)[-1].replace(os.sep,"/")
 
-	for exe in exeL:
-		exeV = exe.split()[0].split("-")[1]
-		exeP = exe.split(" "*8)[-1].replace(os.sep,"/")
+			executablesDict[exeP] = exeV
 
-		executablesDict[exeP] = exeV
+	except FileNotFoundError as e:
+		folders = ["/usr/bin","/bin"]
+		folders = map(lambda path:glob.glob(path), folders)
+		folders = list(chain(*folders))
+
+		files = []
+
+		for i in folders:
+			if os.path.isdir(i):
+				for dirpath, dirnames, filenames in os.walk(i):
+					files.extend(os.path.join(dirpath,f) for f in filenames if len(f) >= 5 and f.startswith("python"))
+		
+		executablesL = []
+
+		for f in files:
+			f = f.replace(os.sep, "/").split("/")[-1].split("-")[0]
+
+			if f not in executablesL:
+				executablesL.append(f)
+		
+		# if "python3" in executablesL: executablesL.remove("python3")
+		# if "python" in executablesL: executablesL.remove("python")
+		
+		for e in executablesL:
+			p = subprocess.Popen([e,"-c","import sys; print(sys.executable);print('.'.join([str(sys.version_info.major),str(sys.version_info.minor),str(sys.version_info.micro)]))"],stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode("utf-8").replace("\r","").split("\n")
+
+			executablesDict[p[0].replace(os.sep,"/")] = p[1]
 
 	for exeP in executablesDict:
 		exeV = executablesDict[exeP]
@@ -102,7 +131,7 @@ def findPythonExecutables(isReturnVersionDict=False):
 	return executables
 
 def main():
-	p = subprocess.Popen(["python","-c","import sys; print(sys._base_executable);print('.'.join([str(sys.version_info.major),str(sys.version_info.minor)]))"],stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode("utf-8").replace("\r","").split("\n")
+	p = subprocess.Popen(["python3","-c","import sys; print(sys._base_executable);print('.'.join([str(sys.version_info.major),str(sys.version_info.minor),str(sys.version_info.micro)]))"],stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode("utf-8").replace("\r","").split("\n")
 	defaultExecutable = p[0].replace(os.sep,"/")
 	defaultExecutableVersion = p[1]
 
@@ -168,17 +197,30 @@ def main():
 			print("\n[INFO] Existing virtualenv with the same name is being deleted.")
 			shutil.rmtree(env_dir)
 			print("\n[INFO] Existing virtualenv with the same name has been deleted.")
-			print("\n[INFO] New virtualenv is being created.")
-			venvCreator(args,executable,verbose)
-			print("\n[INFO] New virtualenv was created.")
 		else:
 			parser.error(f"A virtualenv named {env_dir} already exists. If you want to overwrite, please use the -W/--overwrite argument.")
+	
+	print("\n[INFO] The required modules are being installed.")
+	if verbose:
+		p = subprocess.Popen(["python3","-m","pip","install","virtualenv"],stdout=sys.stdout,stderr=sys.stderr).communicate()
 	else:
-		print("\n[INFO] Virtualenv is being created.")
-		venvCreator(args,executable,verbose)
-		print("\n[INFO] Virtualenv was created.")
+		p = subprocess.Popen(["python3","-m","pip","install","virtualenv"],stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
-	env_exe = glob.glob(f"{env_dir}/Scripts/python*")[0]
+	print("\n[INFO] The necessary modules have been installed.")
+
+	print("\n[INFO] Virtualenv is being created.")
+	venvCreator(args,executable,verbose)
+	print("\n[INFO] Virtualenv was created.")
+	
+	g = glob.glob(f"{env_dir}/Scripts/python*")
+	
+	if not g:
+		g = glob.glob(f"{env_dir}/bin/python*")
+
+		if not g:
+			parser.exit(2, f"\n{parser.prog}: error: The executable file in the virtualenv cannot be reached. Please make sure that the virtual environment is properly created or try to re-create with the --verbose argument.\n")
+
+	env_exe = g[0]
 
 	if not options.no_update:
 		print("\n[INFO] pip libraries are being updated.\n")

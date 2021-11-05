@@ -14,7 +14,7 @@ def main():
 
 	if "make" in args or len(args) == 0:
 		print("\n\t[INFO] The necessary libraries are being installed\n")
-		p = subprocess.Popen(["python", "-m", "pip", "install", "-r", "requirements.txt"],stdout=sys.stdout,stderr=sys.stderr).communicate()
+		p = subprocess.Popen(["python3", "-m", "pip", "install", "-r", "requirements.txt"],stdout=sys.stdout,stderr=sys.stderr).communicate()
 		print("\n\t[INFO] The necessary libraries were installed")
 		print("\n\t[INFO] The executable file is created\n")
 		p2 = subprocess.Popen(["pyinstaller","py_venvcrtr.py","-F","-c","-n","py_venvcrtr"],stdout=sys.stdout,stderr=sys.stderr).communicate()
