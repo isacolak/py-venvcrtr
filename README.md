@@ -2,8 +2,6 @@
 
 Creates a virtual environment for Python.
 
-Note: It works fine on Windows, but not on Linux. It will be fixed as soon as possible.
-
 ## Installing And Build
 
 ```sh
